@@ -1,0 +1,221 @@
+<?php
+$this->layout('main', [
+    'title' => __('Hora Certa - Configuração'),
+    'heading' => __('Configuração da Hora Certa'),
+]);
+?>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><?= __('Hora Certa - Estações') ?></h2>
+    </div>
+    <div class="card-body">
+        <?php if (empty($stations)): ?>
+            <div class="alert alert-info">
+                <?= __('Nenhuma estação encontrada. Crie uma estação primeiro.') ?>
+            </div>
+        <?php else: ?>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th><?= __('Estação') ?></th>
+                            <th><?= __('Shortname') ?></th>
+                            <th><?= __('Fuso Horário') ?></th>
+                            <th><?= __('Voz') ?></th>
+                            <th><?= __('Status') ?></th>
+                            <th><?= __('Ações') ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($stations as $station): ?>
+                            <?php $config = $configurations[$station->getId()] ?? []; ?>
+                            <tr>
+                                <td>
+                                    <strong><?= $this->e($station->getName()) ?></strong>
+                                </td>
+                                <td>
+                                    <code><?= $this->e($station->getShortName()) ?></code>
+                                </td>
+                                <td>
+                                    <?= $this->e($config['timezone'] ?? 'America/Sao_Paulo') ?>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?= ($config['voice_gender'] ?? 'masculino') === 'feminino' ? 'info' : 'secondary' ?>">
+                                        <?= ucfirst($config['voice_gender'] ?? 'masculino') ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?= ($config['enabled'] ?? false) ? 'success' : 'danger' ?>" 
+                                          id="status-<?= $station->getId() ?>">
+                                        <?= ($config['enabled'] ?? false) ? __('Ativo') : __('Inativo') ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="<?= $router->named('plugins:hora-certa:configure', ['station_id' => $station->getId()]) ?>" 
+                                           class="btn btn-sm btn-primary" title="<?= __('Configurar') ?>">
+                                            <i class="fas fa-cog"></i>
+                                        </a>
+                                        
+                                        <button type="button" 
+                                                class="btn btn-sm btn-<?= ($config['enabled'] ?? false) ? 'warning' : 'success' ?> toggle-btn"
+                                                data-station-id="<?= $station->getId() ?>"
+                                                title="<?= ($config['enabled'] ?? false) ? __('Desativar') : __('Ativar') ?>">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                        
+                                        <button type="button" 
+                                                class="btn btn-sm btn-info test-btn"
+                                                data-station-id="<?= $station->getId() ?>"
+                                                title="<?= __('Testar') ?>"
+                                                <?= !($config['enabled'] ?? false) ? 'disabled' : '' ?>>
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3 class="card-title"><?= __('Sobre o Plugin Hora Certa') ?></h3>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h5><?= __('Como funciona:') ?></h5>
+                <ul>
+                    <li><?= __('O plugin cria automaticamente um arquivo de áudio "Hora-Certa.mp3" na pasta de mídia de cada estação') ?></li>
+                    <li><?= __('A cada minuto, o arquivo é atualizado com a hora correspondente') ?></li>
+                    <li><?= __('Configure uma playlist de intervalo no AzuraCast e adicione o arquivo Hora-Certa.mp3') ?></li>
+                    <li><?= __('O arquivo será encontrado em: /media/Hora-Certa.mp3') ?></li>
+                </ul>
+                
+                <h5 class="mt-3"><?= __('Configuração no AzuraCast:') ?></h5>
+                <ol>
+                    <li><?= __('Vá para Estação → Playlists') ?></li>
+                    <li><?= __('Crie uma nova playlist ou edite uma existente') ?></li>
+                    <li><?= __('Configure como "Intervalo" e defina a frequência desejada') ?></li>
+                    <li><?= __('Adicione o arquivo /media/Hora-Certa.mp3 na playlist') ?></li>
+                    <li><?= __('Salve e ative a playlist') ?></li>
+                </ol>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> <?= __('Dica importante:') ?></h6>
+                    <p><?= __('Certifique-se de configurar o fuso horário correto para sua região para que a hora seja anunciada corretamente.') ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle de ativação/desativação
+    document.querySelectorAll('.toggle-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const stationId = this.dataset.stationId;
+            const btnElement = this;
+            const statusElement = document.getElementById('status-' + stationId);
+            const testBtn = this.parentNode.querySelector('.test-btn');
+            
+            btnElement.disabled = true;
+            
+            fetch('<?= $router->named('plugins:hora-certa:toggle', ['station_id' => '']) ?>' + stationId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.enabled) {
+                        statusElement.textContent = '<?= __('Ativo') ?>';
+                        statusElement.className = 'badge badge-success';
+                        btnElement.className = 'btn btn-sm btn-warning toggle-btn';
+                        btnElement.title = '<?= __('Desativar') ?>';
+                        testBtn.disabled = false;
+                    } else {
+                        statusElement.textContent = '<?= __('Inativo') ?>';
+                        statusElement.className = 'badge badge-danger';
+                        btnElement.className = 'btn btn-sm btn-success toggle-btn';
+                        btnElement.title = '<?= __('Ativar') ?>';
+                        testBtn.disabled = true;
+                    }
+                    
+                    // Mostrar mensagem de sucesso
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show';
+                    alert.innerHTML = '<i class="fas fa-check-circle"></i> ' + 
+                                    (data.enabled ? '<?= __('Hora Certa ativada!') ?>' : '<?= __('Hora Certa desativada!') ?>') +
+                                    '<button type="button" class="close" data-dismiss="alert">&times;</button>';
+                    document.querySelector('.card').insertBefore(alert, document.querySelector('.card-body'));
+                    
+                    setTimeout(() => alert.remove(), 5000);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('<?= __('Erro ao alterar status da Hora Certa') ?>');
+            })
+            .finally(() => {
+                btnElement.disabled = false;
+            });
+        });
+    });
+    
+    // Teste da Hora Certa
+    document.querySelectorAll('.test-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const stationId = this.dataset.stationId;
+            const btnElement = this;
+            
+            btnElement.disabled = true;
+            btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch('<?= $router->named('plugins:hora-certa:test', ['station_id' => '']) ?>' + stationId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const alertClass = data.success ? 'alert-success' : 'alert-danger';
+                const icon = data.success ? 'fas fa-check-circle' : 'fas fa-times-circle';
+                
+                const alert = document.createElement('div');
+                alert.className = `alert ${alertClass} alert-dismissible fade show`;
+                alert.innerHTML = `<i class="${icon}"></i> ${data.message}` +
+                                '<button type="button" class="close" data-dismiss="alert">&times;</button>';
+                
+                if (data.output && !data.success) {
+                    alert.innerHTML += `<br><small><strong>Output:</strong><br><code>${data.output}</code></small>`;
+                }
+                
+                document.querySelector('.card').insertBefore(alert, document.querySelector('.card-body'));
+                setTimeout(() => alert.remove(), 10000);
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('<?= __('Erro ao testar Hora Certa') ?>');
+            })
+            .finally(() => {
+                btnElement.disabled = false;
+                btnElement.innerHTML = '<i class="fas fa-play"></i>';
+            });
+        });
+    });
+});
+</script>

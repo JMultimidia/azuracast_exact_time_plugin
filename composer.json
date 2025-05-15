@@ -1,0 +1,17 @@
+{
+    "name": "jmultimidia/azuracast_exact_time_plugin",
+    "description": "Professional plugin that adds automatic time announcement functionality to AzuraCast.",
+    "type": "azuracast-plugin",
+    "authors": [
+        {
+            "name": "Johannes Nogueira",
+            "email": "suporte@jmultimidia.com.br"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Plugin\\ExamplePlugin\\": "src"
+        }
+    },
+    "require": {}
+}
