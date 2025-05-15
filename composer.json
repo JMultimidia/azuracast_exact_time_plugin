@@ -1,6 +1,7 @@
 {
     "name": "jmultimidia/azuracast_exact_time_plugin",
     "description": "Professional plugin that adds automatic time announcement functionality to AzuraCast.",
+    "keywords": ["azuracast", "plugin", "exact-time", "time-announcement", "radio"],
     "type": "azuracast-plugin",
     "authors": [
         {
@@ -13,5 +14,14 @@
             "Plugin\\ExamplePlugin\\": "src"
         }
     },
-    "require": {}
+    "require": {
+    "php": ">=8.1"
+    },
+    "extra": {
+    "azuracast": {
+      "name": "Exact Time",
+      "description": "Add automatic announcements of the exact time",
+      "version": "1.0.0"
+    }
+  }
 }
