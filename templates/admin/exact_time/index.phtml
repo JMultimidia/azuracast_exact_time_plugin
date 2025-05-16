@@ -1,0 +1,156 @@
+<?php
+/**
+ * @var \App\Http\ServerRequest $request
+ * @var array $stations
+ * @var array $timezones
+ * @var array $voice_genders
+ */
+
+$this->layout('main', ['title' => __('Configuração do Exact Time')]);
+?>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title"><?= __('Configuração Global do Exact Time') ?></h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <?= __('Configure a funcionalidade Exact Time para todas as estações. Esta função automaticamente reproduz anúncios de horário a cada minuto.') ?>
+                </p>
+                
+                <form method="post" action="<?= $router->named('admin:exact_time:edit') ?>">
+                    <?= $csrf ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th><?= __('Estação') ?></th>
+                                    <th><?= __('Status') ?></th>
+                                    <th><?= __('Fuso Horário') ?></th>
+                                    <th><?= __('Gênero da Voz') ?></th>
+                                    <th><?= __('Incluir Efeito') ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($stations as $station): ?>
+                                <tr>
+                                    <td>
+                                        <strong><?= $this->e($station['name']) ?></strong><br>
+                                        <small class="text-muted"><?= $this->e($station['short_name']) ?></small>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input 
+                                                class="form-check-input" 
+                                                type="checkbox" 
+                                                id="enabled_<?= $station['id'] ?>"
+                                                name="stations[<?= $station['id'] ?>][enabled]"
+                                                value="1"
+                                                <?= $station['enabled'] ? 'checked' : '' ?>
+                                            >
+                                            <label class="form-check-label" for="enabled_<?= $station['id'] ?>">
+                                                <?= __('Habilitado') ?>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <select 
+                                            class="form-select form-select-sm" 
+                                            name="stations[<?= $station['id'] ?>][timezone]"
+                                            id="timezone_<?= $station['id'] ?>"
+                                        >
+                                            <?php foreach ($timezones as $tz_key => $tz_name): ?>
+                                            <option 
+                                                value="<?= $this->e($tz_key) ?>"
+                                                <?= $station['timezone'] === $tz_key ? 'selected' : '' ?>
+                                            >
+                                                <?= $this->e($tz_name) ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select 
+                                            class="form-select form-select-sm" 
+                                            name="stations[<?= $station['id'] ?>][voice_gender]"
+                                            id="voice_<?= $station['id'] ?>"
+                                        >
+                                            <?php foreach ($voice_genders as $voice_key => $voice_name): ?>
+                                            <option 
+                                                value="<?= $this->e($voice_key) ?>"
+                                                <?= $station['voice_gender'] === $voice_key ? 'selected' : '' ?>
+                                            >
+                                                <?= $this->e($voice_name) ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="form-check">
+                                            <input 
+                                                class="form-check-input" 
+                                                type="checkbox" 
+                                                id="effect_<?= $station['id'] ?>"
+                                                name="stations[<?= $station['id'] ?>][include_effect]"
+                                                value="1"
+                                                <?= $station['include_effect'] ? 'checked' : '' ?>
+                                            >
+                                            <label class="form-check-label" for="effect_<?= $station['id'] ?>">
+                                                <?= __('Sim') ?>
+                                            </label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> <?= __('Salvar Configurações') ?>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Card de instruções -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title"><?= __('Instruções de Uso') ?></h5>
+            </div>
+            <div class="card-body">
+                <h6><?= __('Estrutura de Arquivos') ?></h6>
+                <p><?= __('Os arquivos de áudio devem estar organizados na seguinte estrutura dentro do diretório de mídia de cada estação:') ?></p>
+                <pre><code>exact_time/
+├── voices/
+│   ├── masculino_00.mp3  (apenas para minuto 00)
+│   ├── masculino_00_01.mp3 (para 00:01)
+│   ├── masculino_00_02.mp3 (para 00:02)
+│   └── ... (para cada minuto)
+└── effects/
+    ├── efeito_hora1.mp3
+    └── repetir.mp3</code></pre>
+                
+                <h6 class="mt-3"><?= __('Como Funciona') ?></h6>
+                <ul>
+                    <li><?= __('O exact time é executado automaticamente a cada minuto') ?></li>
+                    <li><?= __('Para minuto 00, usa apenas o arquivo da hora (ex: masculino_14.mp3)') ?></li>
+                    <li><?= __('Para outros minutos, usa o arquivo específico (ex: masculino_14_30.mp3)') ?></li>
+                    <li><?= __('O efeito sonoro é reproduzido antes da hora, se habilitado') ?></li>
+                    <li><?= __('O arquivo final é salvo como <code>exact_time/exact-time.mp3</code> na pasta da estação') ?></li>
+                </ul>
+                
+                <h6 class="mt-3"><?= __('Configuração no AzuraCast') ?></h6>
+                <ol>
+                    <li><?= __('Crie uma Playlist de Tipo "Jingle/Station ID"') ?></li>
+                    <li><?= __('Configure a playlist para tocar a cada X músicas') ?></li>
+                    <li><?= __('Adicione o arquivo <code>exact_time/exact-time.mp3</code> à playlist') ?></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>

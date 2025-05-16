@@ -1,0 +1,98 @@
+<?php
+$this->layout('main', [
+    'title' => $title,
+    'manual' => true
+]);
+
+/** @var App\Entity\Station $station */
+/** @var array $settings */
+/** @var array $audio_structure */
+/** @var array $timezones */
+/** @var array $voice_genders */
+/** @var App\Http\RouterInterface $router */
+?>
+
+<div class="card">
+    <div class="card-header bg-primary-dark">
+        <h2 class="card-title">
+            Configuração do Exact Time
+        </h2>
+    </div>
+    <div class="card-body">
+        <h3 class="card-title mb-3">
+            Status dos Arquivos de Áudio
+        </h3>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <?php if (empty($audio_structure['missing_files'])): ?>
+                            <div class="alert alert-success">
+                                <i class="material-icons">check_circle</i>
+                                Todos os arquivos de áudio estão disponíveis.
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-warning">
+                                <i class="material-icons">warning</i>
+                                Alguns arquivos de áudio estão faltando:
+                                <ul class="mt-2">
+                                    <?php foreach($audio_structure['missing_files'] as $file): ?>
+                                        <li><?= $file ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" action="<?= $router->named('stations:exact_time:edit', ['station_id' => $station->getId()]) ?>">
+            <div class="form-group">
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" name="enabled" id="enabled" value="1" <?= ($settings['exact_time_enabled'] ?? false) ? 'checked' : '' ?>>
+                    <label class="custom-control-label" for="enabled">Ativar anúncios de hora certa</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="timezone">Fuso Horário</label>
+                <select name="timezone" id="timezone" class="form-control">
+                    <?php foreach($timezones as $tz_key => $tz_name): ?>
+                        <option value="<?= $tz_key ?>" <?= ($settings['exact_time_timezone'] ?? '') === $tz_key ? 'selected' : '' ?>>
+                            <?= $tz_name ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small class="form-text text-muted">Escolha o fuso horário para os anúncios de hora.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="voice_gender">Voz</label>
+                <select name="voice_gender" id="voice_gender" class="form-control">
+                    <?php foreach($voice_genders as $gender_key => $gender_name): ?>
+                        <option value="<?= $gender_key ?>" <?= ($settings['exact_time_voice_gender'] ?? '') === $gender_key ? 'selected' : '' ?>>
+                            <?= $gender_name ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small class="form-text text-muted">Escolha o tipo de voz para os anúncios.</small>
+            </div>
+
+            <div class="form-group">
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" name="include_effect" id="include_effect" value="1" <?= ($settings['exact_time_include_effect'] ?? false) ? 'checked' : '' ?>>
+                    <label class="custom-control-label" for="include_effect">Incluir efeito sonoro</label>
+                </div>
+                <small class="form-text text-muted">Adiciona um efeito sonoro antes do anúncio da hora.</small>
+            </div>
+
+            <div class="buttons">
+                <button type="submit" class="btn btn-primary">
+                    Salvar Configurações
+                </button>
+            </div>
+        </form>
+    </div>
+</div> 

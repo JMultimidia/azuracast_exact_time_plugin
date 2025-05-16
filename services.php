@@ -23,14 +23,16 @@ return [
         return new AdminExactTimeController(
             $di->get(\App\Entity\Repository\StationRepository::class),
             $di->get(\App\Environment::class),
-            $di->get(\App\Flysystem\StationFilesystems::class)
+            $di->get(\App\Flysystem\StationFilesystems::class),
+            $di->get(\Doctrine\ORM\EntityManagerInterface::class)
         );
     },
     
     StationsExactTimeController::class => function ($di) {
         return new StationsExactTimeController(
             $di->get(\App\Flysystem\StationFilesystems::class),
-            $di->get(AudioManager::class)
+            $di->get(AudioManager::class),
+            $di->get(\Doctrine\ORM\EntityManagerInterface::class)
         );
     },
     
