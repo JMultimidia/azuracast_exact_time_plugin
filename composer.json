@@ -21,7 +21,21 @@
     "azuracast": {
       "name": "Exact Time",
       "description": "Add automatic announcements of the exact time",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "author": "AzuraCast Community",
+      "min_azuracast_version": "0.19.0",
+      "permissions": [
+        "manage_stations",
+        "manage_station_media"
+      ],
+      "routes": {
+        "admin": [
+          "/admin/exact-time"
+        ],
+        "stations": [
+          "/manage/station/{station_id}/exact-time"
+        ]
+      }
     }
   }
 }
